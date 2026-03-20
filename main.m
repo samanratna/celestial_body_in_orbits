@@ -1,63 +1,38 @@
-% clear everything
 clear; clc; close all;
 
 %% ===============================
 % Constants
 % ===============================
-G = 6.667e-20;                 % km^3/kg/s^2
-mass_of_earth = 5.9722e24;     
-
-mu = G * mass_of_earth;        % standard gravitational parameter
+G = 6.667e-20;
+mass_of_earth = 5.9722e24;
+mu = G * mass_of_earth;
 
 %% ===============================
-% ISS Orbital Elements
+% Orbit Radii
 % ===============================
-a = 6780;                      % km
-e = 0.0006;
-
-i = deg2rad(45);               
-RAAN = deg2rad(30);            
-omega = deg2rad(10);           
-theta = deg2rad(0);            
+r1 = 6780;      % initial orbit (km)
+r2 = 12000;     % target orbit (km)
 
 %% ===============================
-% Perifocal Frame Function
+% Initial Circular Orbit State
 % ===============================
-function [r_pf, v_pf] = bodyInPerifocalFrame(theta, e, mu, a)
+r0 = [r1; 0; 0];
+v_circ_1 = sqrt(mu/r1);
+v0 = [0; v_circ_1; 0];
 
-    h = sqrt(mu * a * (1 - e^2));
-    
-    r_pf = (h^2/mu) * (1/(1 + e*cos(theta))) * ...
-           [cos(theta); sin(theta); 0];
-    
-    v_pf = (mu/h) * ...
-           [-sin(theta); e + cos(theta); 0];
-end
-
-[r_pf, v_pf] = bodyInPerifocalFrame(theta, e, mu, a);
+z0 = [r0; v0];
 
 %% ===============================
-% Rotation Matrix (Perifocal → ECI)
+% Hohmann Transfer ΔV
 % ===============================
-Q = [ ...
-    -sin(RAAN)*cos(i)*sin(omega) + cos(RAAN)*cos(omega), ...
-     cos(RAAN)*cos(i)*sin(omega) + sin(RAAN)*cos(omega), ...
-     sin(i)*sin(omega);
+dv1 = sqrt(mu/r1) * (sqrt(2*r2/(r1+r2)) - 1);
+dv2 = sqrt(mu/r2) * (1 - sqrt(2*r1/(r1+r2)));
 
-    -sin(RAAN)*cos(i)*cos(omega) - cos(RAAN)*sin(omega), ...
-     cos(RAAN)*cos(i)*cos(omega) - sin(RAAN)*sin(omega), ...
-     sin(i)*cos(omega);
-
-     sin(RAAN)*sin(i), ...
-    -cos(RAAN)*sin(i), ...
-     cos(i)
-];
-
-r0 = Q * r_pf;
-v0 = Q * v_pf;
+fprintf("Delta-V1: %.4f km/s\n", dv1);
+fprintf("Delta-V2: %.4f km/s\n", dv2);
 
 %% ===============================
-% ODE Function (Two-body dynamics)
+% ODE Function
 % ===============================
 function dzdt = two_body_ode(t, z, mu)
 
@@ -72,21 +47,42 @@ function dzdt = two_body_ode(t, z, mu)
 end
 
 %% ===============================
-% Initial State
+% Burn 1 (at t = 0)
 % ===============================
-z0 = [r0; v0];
+v0_transfer = v0 + [0; dv1; 0];   % tangential burn
+z0_transfer = [r0; v0_transfer];
 
 %% ===============================
-% Time Span
+% Transfer Time (half ellipse)
 % ===============================
-tspan = [0 86400];   % 1 day
-
-options = odeset('RelTol',1e-10);
+a_transfer = (r1 + r2)/2;
+T_transfer = pi * sqrt(a_transfer^3 / mu);
 
 %% ===============================
-% Solve ODE
+% Simulate Transfer Orbit
 % ===============================
-[t, states] = ode45(@(t,z) two_body_ode(t,z,mu), tspan, z0, options);
+tspan1 = [0 T_transfer];
+[t1, states1] = ode45(@(t,z) two_body_ode(t,z,mu), tspan1, z0_transfer);
+
+%% ===============================
+% Burn 2 (at apoapsis)
+% ===============================
+z_apogee = states1(end,:)';
+
+r_vec2 = z_apogee(1:3);
+v_vec2 = z_apogee(4:6);
+
+v_hat = v_vec2 / norm(v_vec2);
+
+v_new = v_vec2 + dv2 * v_hat;
+
+z0_final = [r_vec2; v_new];
+
+%% ===============================
+% Final Circular Orbit Simulation
+% ===============================
+tspan2 = [0 20000];
+[t2, states2] = ode45(@(t,z) two_body_ode(t,z,mu), tspan2, z0_final);
 
 %% ===============================
 % Plot Earth
@@ -96,13 +92,18 @@ R_earth = 6371;
 
 figure;
 surf(sx*R_earth, sy*R_earth, sz*R_earth, ...
-    'FaceColor', 'blue', 'EdgeColor', 'none', 'FaceAlpha', 0.3);
+    'FaceColor','blue','EdgeColor','none','FaceAlpha',0.3);
 hold on;
 
 %% ===============================
-% Plot Orbit
+% Plot Orbits
 % ===============================
-plot3(states(:,1), states(:,2), states(:,3), 'g', 'LineWidth', 1.5);
+plot3(states1(:,1), states1(:,2), states1(:,3), 'r', 'LineWidth', 2); % transfer
+plot3(states2(:,1), states2(:,2), states2(:,3), 'g', 'LineWidth', 2); % final
+
+% initial circular orbit (reference)
+theta = linspace(0,2*pi,200);
+plot3(r1*cos(theta), r1*sin(theta), zeros(size(theta)), 'k--');
 
 axis equal;
 grid on;
@@ -110,4 +111,6 @@ grid on;
 xlabel('X (km)');
 ylabel('Y (km)');
 zlabel('Z (km)');
-title('Two-Body Orbit Simulation (ISS-like Orbit)');
+title('Hohmann Transfer Orbit');
+
+legend('Earth','Transfer Orbit','Final Orbit','Initial Orbit');
