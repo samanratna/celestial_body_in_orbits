@@ -78,11 +78,14 @@ v_new = v_vec2 + dv2 * v_hat;
 
 z0_final = [r_vec2; v_new];
 
+options = odeset('RelTol',1e-10);
+
+
 %% ===============================
 % Final Circular Orbit Simulation
 % ===============================
 tspan2 = [0 20000];
-[t2, states2] = ode45(@(t,z) two_body_ode(t,z,mu), tspan2, z0_final);
+[t2, states2] = ode45(@(t,z) two_body_ode(t,z,mu), tspan2, z0_final, options);
 
 %% ===============================
 % Plot Earth
