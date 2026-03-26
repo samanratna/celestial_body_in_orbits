@@ -1,11 +1,7 @@
 clear; clc; close all;
 
-%% ===============================
-% Constants
-% ===============================
-G = 6.667e-20;
-mass_of_earth = 5.9722e24;
-mu = G * mass_of_earth;
+% pull in constants
+constants;
 
 %% ===============================
 % Orbit Radii
@@ -46,16 +42,8 @@ function dzdt = two_body_ode(t, z, mu)
     dzdt(4:6) = -mu * r_vec / r^3;
 end
 
-%% ===============================================
-% Plot Earth
-% ===============================
-R_earth = 6371;
-[sx, sy, sz] = sphere(40);
-
-figure;
-surf(sx*R_earth, sy*R_earth, sz*R_earth, ...
-    'FaceColor','blue','EdgeColor','none','FaceAlpha',0.3);
-hold on;
+% pull in Earth model for visualization
+earth_model;
 
 %% ===============================================
 % initial circular orbit (reference)

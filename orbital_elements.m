@@ -9,7 +9,7 @@ close all;
 a = 384400;               % km
 e = 0.0549;
 i = deg2rad(18.3);        % inclination (equatorial frame)
-Omega = deg2rad(125.08);  % RAAN
+Omega = deg2rad(10.08);  % RAAN
 omega = deg2rad(318.15);  % argument of perigee
 theta = deg2rad(135);     % chosen true anomaly
 
@@ -91,7 +91,7 @@ v_eci = Q_pqw_to_eci * v_pf;
 % disp(r_eci)
 % 
 % disp('Moon Velocity Vector in ECI (km/s):')
-% disp(v_eci)
+% disp(v_eci)~
 
 %% ===============================
 % Step 5: Generate Full Orbit
@@ -142,3 +142,6 @@ zlabel('Z (km)')
 title('Orbital Elements Visualization (ECI Frame)')
 
 view(3)
+
+# figure_handle = figure();
+# set(figure_handle, 'units', 'normalized', 'outerposition', [0 0 1 1]);
