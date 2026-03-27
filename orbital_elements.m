@@ -66,7 +66,7 @@ end
 # -------------------------------------------------------------------------------
 initial_condition = [r_eci; v_eci];                     # initial state vector (position and velocity)
 T = 2 * pi * sqrt(a^3/mu);                              # orbital period (in seconds)
-tspan = [0 T];                                         # time span for one full orbit
+tspan = [0 T];                                          # time span for one full orbit
 options = odeset('RelTol',1e-8,'AbsTol',1e-9);          # tolerance settings for ODE solver
 
 # Call ODE45 function
@@ -80,64 +80,3 @@ configure_figures;
 model('Earth');
 plot3(states(:,1), states(:,2), states(:,3), 'r', 'LineWidth', 2); % transfer
 
-
-# # --------------------------------
-
-# % disp('Moon Position Vector in ECI (km):')
-# % disp(r_eci)
-# % 
-# % disp('Moon Velocity Vector in ECI (km/s):')
-# % disp(v_eci)~
-
-# %% ===============================
-# % Step 5: Generate Full Orbit
-# % ===============================
-
-# theta_vals = linspace(0, 2*pi, 800);
-# r_pf_all = zeros(3,length(theta_vals));
-
-# for k = 1:length(theta_vals)
-
-#     theta_k = theta_vals(k);
-#     r_scalar = (h^2/mu) * (1/(1 + e*cos(theta_k)));
-
-#     r_pf_all(:,k) = r_scalar * [cos(theta_k);
-#                                 sin(theta_k);
-#                                 0];
-# end
-
-# r_eci_all = Q_pqw_to_eci * r_pf_all;
-
-# %% ===============================
-# % Step 6: 3D Visualization
-# % ===============================
-
-# figure
-# hold on
-# grid on
-# axis equal
-
-# % Plot Moon orbit
-# plot3(r_eci_all(1,:), r_eci_all(2,:), r_eci_all(3,:), ...
-#       'b','LineWidth',1.5)
-
-# % Plot Earth
-# Re = 6378;  % km
-# [X,Y,Z] = sphere(50);
-# surf(Re*X, Re*Y, Re*Z, ...
-#      'FaceAlpha',0.3, ...
-#      'EdgeColor','none')
-
-# % % Plot current Moon position
-# % quiver3(0,0,0, r_eci(1), r_eci(2), r_eci(3), ...
-# %         'r','LineWidth',2)
-
-# xlabel('X (km)')
-# ylabel('Y (km)')
-# zlabel('Z (km)')
-# title('Orbital Elements Visualization (ECI Frame)')
-
-# view(3)
-
-# # figure_handle = figure();
-# # set(figure_handle, 'units', 'normalized', 'outerposition', [0 0 1 1]);
