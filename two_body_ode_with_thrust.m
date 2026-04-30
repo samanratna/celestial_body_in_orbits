@@ -10,7 +10,40 @@ function dzdt = two_body_ode_with_thrust(t, z, mu)
 
     dzdt = zeros(6,1);
     dzdt(1:3) = v_vec;
-    a_thrust = [0; -0.00000005; 0];
-    dzdt(4:6) = a_thrust + (-mu * r_vec / r^3);
-    # dzdt(4:6) =  addition of force -mu * r_vec / r^3;
+    
+    # a_thrust = [0; 0; 0.0000002];
+    a_thrust = [0; 0; 9e-8];
+
+
+
+
+
+    % Force column vectors
+    r_chief  = r_vec(:);
+    v_chief  = v_vec(:);
+
+    % Relative position/velocity in ECI
+    rho_lvlh     = r_vec;
+
+    % Chief LVLH basis
+    r_hat = r_chief / norm(r_chief);                #i
+
+    h_vec = cross(r_chief, v_chief);
+    h_hat = h_vec / norm(h_vec);                    #k
+
+
+    y_hat = cross(h_hat, r_hat);   % along-track    #j
+
+    % Rotation matrix: ECI -> LVLH
+    C = [r_hat.'; y_hat.'; h_hat.'];
+
+    % Relative state in LVLH
+    rho_eci = inv(C) * a_thrust;
+
+
+
+    
+
+    dzdt(4:6) = rho_eci + (-mu * r_vec / r^3);
+    # dzdt(4:6) = a_thrust + (-mu * r_vec / r^3);
 end

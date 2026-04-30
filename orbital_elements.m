@@ -19,22 +19,22 @@ body2 = get_body_data('moon_like');
 %% ==========================================
 % Convert orbital elements to ECI state
 % ==========================================
-[r1_eci, v1_eci] = oe_to_state(body1.a, body1.e, body1.i, body1.Omega, body1.omega, body1.theta, body1.mu);
-[r2_eci, v2_eci] = oe_to_state(body2.a, body2.e, body2.i, body2.Omega, body2.omega, body2.theta, body2.mu);
+[r1_eci, v1_eci] = oe_to_state(body1.a, body1.e, body1.i, body1.Omega, body1.omega, body1.theta, body1.mu); % moon
+[r2_eci, v2_eci] = oe_to_state(body2.a, body2.e, body2.i, body2.Omega, body2.omega, body2.theta, body2.mu); % moon_like
 
 % Initial state vectors
-z0_1 = [r1_eci; v1_eci];
-z0_2 = [r2_eci; v2_eci];
+z0_1 = [r1_eci; v1_eci];    % moon
+z0_2 = [r2_eci; v2_eci];    % moon_like
 
 %% ==========================================
 % Time settings
 % Use a common time vector so relative motion is computed
 % at matching times for both bodies
 % ==========================================
-T1 = orbital_period(body1.a, body1.mu);
-T2 = orbital_period(body2.a, body2.mu);
+T1 = orbital_period(body1.a, body1.mu); % moon
+T2 = orbital_period(body2.a, body2.mu); % moon_like
 
-n_periods = 2;
+n_periods = 5;
 Tf = n_periods * min(T1, T2);
 tspan = linspace(0, Tf, 1000);
 
@@ -44,8 +44,16 @@ options = odeset('RelTol', 1e-8, 'AbsTol', 1e-9);
 %% ==========================================
 % Propagate both bodies
 % ==========================================
-[t1, states1] = ode45(@(t,z) two_body_ode(t, z, body1.mu), tspan, z0_1, options);
-[t2, states2] = ode45(@(t,z) two_body_ode_with_thrust(t, z, body2.mu), tspan, z0_2, options);
+[t1, states1] = ode45(@(t,z) two_body_ode(t, z, body1.mu), tspan, z0_1, options);   % moon
+
+# % get parameters of chief
+# n = 1;  % evaluate at initial time
+# _r_chief  = states1(n,1:3).';
+# _v_chief  = states1(n,4:6).';
+
+
+
+[t2, states2] = ode45(@(t,z) two_body_ode_with_thrust(t, z, body2.mu), tspan, z0_2, options);   % moon_like
 
 %% ==========================================
 % Plot absolute trajectories in ECI
@@ -58,9 +66,9 @@ view(3);
 
 model('Earth');
 
-plot3(states1(:,1), states1(:,2), states1(:,3), 'b', 'LineWidth', 1.5);
-plot3(states2(:,1), states2(:,2), states2(:,3), 'r', 'LineWidth', 1.5);
-plot3(states1(1,1), states1(1,2), states1(1,3), 'bo', 'MarkerFaceColor', 'b', 'MarkerSize', 5);
+plot3(states1(:,1), states1(:,2), states1(:,3), 'b', 'LineWidth', 1.5); % blue is moon
+plot3(states2(:,1), states2(:,2), states2(:,3), 'r', 'LineWidth', 1.5); % red is moon_like (thrust applied to red)
+plot3(states1(1,1), states1(1,2), states1(1,3), 'bo', 'MarkerFaceColor', 'b', 'MarkerSize', 10);
 plot3(states2(1,1), states2(1,2), states2(1,3), 'ro', 'MarkerFaceColor', 'r', 'MarkerSize', 5);
 
 xlabel('x (km)');
@@ -68,7 +76,7 @@ ylabel('y (km)');
 zlabel('z (km)');
 title('Two Bodies Orbiting Earth');
 
-legend(body1.name, body2.name, [body1.name ' Start'], [body2.name ' Start'], 'Location', 'best');
+# legend(body1.name, body2.name, [body1.name ' Chief'], [body2.name ' Deputy'], 'Location', 'best');
 
 hold off;
 
@@ -99,14 +107,24 @@ N = min(size(states1,1), size(states2,1));
 rel21 = zeros(N, 6);
 
 for k = 1:N
+
+    % chief
     r1 = states1(k,1:3).';
     v1 = states1(k,4:6).';
 
+    % deputy
     r2 = states2(k,1:3).';
     v2 = states2(k,4:6).';
 
+    % position of deputy relative to chief in chief LVLH frame
     rel21(k,:) = eci_to_lvlh_relative_state(r1, v1, r2, v2).';
 end
+
+disp('Size of rel21:')
+disp(size(rel21))
+
+disp('Size of r1 states1:')
+disp(size(states1(:,1:3)))
 
 %% ==========================================
 % ROE history of body2 with respect to body1

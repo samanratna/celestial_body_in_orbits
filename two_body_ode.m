@@ -10,6 +10,5 @@ function dzdt = two_body_ode(t, z, mu)
 
     dzdt = zeros(6,1);
     dzdt(1:3) = v_vec;
-    # a_thrust = [0.0000001; 0; 0];
     dzdt(4:6) = -mu * r_vec / r^3;
 end
