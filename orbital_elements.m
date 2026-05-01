@@ -34,7 +34,7 @@ z0_2 = [r2_eci; v2_eci];    % moon_like
 T1 = orbital_period(body1.a, body1.mu); % moon
 T2 = orbital_period(body2.a, body2.mu); % moon_like
 
-n_periods = 5;
+n_periods = 10;
 Tf = n_periods * min(T1, T2);
 tspan = linspace(0, Tf, 1000);
 

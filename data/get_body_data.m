@@ -1,6 +1,7 @@
 function body = get_body_data(body_name)
 
     switch lower(body_name)
+    
         case 'moon'
             body.name   = 'moon';
             body.a      = 384400;          % km
@@ -16,7 +17,7 @@ function body = get_body_data(body_name)
         case 'moon_like'
             body.name   = 'moon_like';
             body.a      = 384400;          % km
-            body.e      = 0.3;    % exaggerated eccentricity for visualization
+            body.e      = 0.3;             
             body.i      = deg2rad(0);
             body.Omega  = deg2rad(0);
             body.omega  = deg2rad(0);

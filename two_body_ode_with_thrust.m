@@ -12,10 +12,11 @@ function dzdt = two_body_ode_with_thrust(t, z, mu)
     dzdt(1:3) = v_vec;
     
     # a_thrust = [0; 0; 0.0000002];
-    a_thrust = [0; 0; 9e-8];
-
-
-
+    # a_thrust = [0.00000012; 0; 0];
+    # a_thrust = [0; 0.00000002; 0];
+    # a_thrust = [0; 0; 9e-8];
+    # a_thrust = [0; 0.000000015; 9e-8];
+    a_thrust = [0; 0; 0];
 
 
     % Force column vectors
